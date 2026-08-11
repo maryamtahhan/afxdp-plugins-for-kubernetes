@@ -17,7 +17,6 @@ package dpcnisyncerclient
 
 import (
 	"context"
-	"net"
 
 	"github.com/redhat-et/afxdp-plugins-for-kubernetes/constants"
 	pb "github.com/redhat-et/afxdp-plugins-for-kubernetes/internal/dpcnisyncer"
@@ -37,10 +36,7 @@ var (
 
 func DeleteNetDev(name string) error {
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, sock, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, _proto, addr)
-		}))
+	conn, err := grpc.NewClient("unix:"+sock, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logging.Errorf("error connecting to Server")
 		return err

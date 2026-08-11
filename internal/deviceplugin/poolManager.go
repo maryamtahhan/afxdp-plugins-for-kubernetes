@@ -31,7 +31,8 @@ import (
 	"github.com/redhat-et/afxdp-plugins-for-kubernetes/internal/tools"
 	"github.com/redhat-et/afxdp-plugins-for-kubernetes/internal/udsserver"
 	logging "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
+	"context"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -327,11 +328,7 @@ func (pm *PoolManager) GetPreferredAllocation(context.Context, *pluginapi.Prefer
 }
 
 func (pm *PoolManager) registerWithKubelet() error {
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, pluginapi.KubeletSocket, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", addr)
-		}))
+	conn, err := grpc.NewClient("unix:"+pluginapi.KubeletSocket, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return fmt.Errorf("error connecting to Kubelet: %w", err)
 	}
@@ -370,18 +367,21 @@ func (pm *PoolManager) startGRPC() error {
 			logging.Errorf("API Server socket error: %v", err)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, pm.DpAPISocket, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(), grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
-			return (&net.Dialer{}).DialContext(ctx, "unix", addr)
-		}),
-	)
-	if err != nil {
-		logging.Errorf("Unable to establish test connection with %s gRPC server: %v", pm.Name, err)
-		return err
+	deadline := time.Now().Add(5 * time.Second)
+	var dialErr error
+	for time.Now().Before(deadline) {
+		var c net.Conn
+		c, dialErr = net.DialTimeout("unix", pm.DpAPISocket, time.Second)
+		if dialErr == nil {
+			c.Close()
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
 	}
-	conn.Close()
+	if dialErr != nil {
+		logging.Errorf("Unable to establish test connection with %s gRPC server: %v", pm.Name, dialErr)
+		return dialErr
+	}
 	logging.Debugf(pm.DevicePrefix+"/%s started serving on %s", pm.Name, pm.DpAPISocket)
 
 	return nil
