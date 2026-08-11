@@ -16,9 +16,11 @@ jobs:
       statuses: write  # for github/super-linter to mark status of each linter run
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      with:
+        fetch-depth: 0
     - name: super-linter
-      uses: github/super-linter@v7
+      uses: github/super-linter@12150456a73e248bdc94d0794898f94e23127c88 # v7
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
@@ -32,9 +34,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: 1.25
 
@@ -47,18 +49,20 @@ jobs:
 
     - name: Install libbpf
       run: |
-          wget -q -O - https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/libbpf-1.5.0.tar.gz https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
+          && echo "53492aff6dd47e4da04ef5e672d753b9743848bdb38e9d90eafbe190b7983c44  /tmp/libbpf-1.5.0.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/libbpf-1.5.0.tar.gz -C "${GITHUB_WORKSPACE}" \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/libbpf-1.5.0/src install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0 /tmp/libbpf-1.5.0.tar.gz
 
     - name: Install libxdp
       run: |
-          wget -q -O - https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/xdp-tools-1.4.2.tar.gz https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
+          && echo "2c916b5a9d26e64e8003e9b7d0e168c74520bff7a30f0345c80ae15eafc4ed0f  /tmp/xdp-tools-1.4.2.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/xdp-tools-1.4.2.tar.gz -C "${GITHUB_WORKSPACE}" \
           && cd "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 && ./configure && cd - \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 PREFIX=/usr install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 \
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 /tmp/xdp-tools-1.4.2.tar.gz \
           && pkg-config --libs --static libelf
 
     - name: Run build
@@ -68,9 +72,9 @@ jobs:
   go-static-tools:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: 1.25
 
@@ -83,22 +87,24 @@ jobs:
 
     - name: Install libbpf
       run: |
-          wget -q -O - https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/libbpf-1.5.0.tar.gz https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
+          && echo "53492aff6dd47e4da04ef5e672d753b9743848bdb38e9d90eafbe190b7983c44  /tmp/libbpf-1.5.0.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/libbpf-1.5.0.tar.gz -C "${GITHUB_WORKSPACE}" \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/libbpf-1.5.0/src install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0 /tmp/libbpf-1.5.0.tar.gz
 
     - name: Install libxdp
       run: |
-          wget -q -O - https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/xdp-tools-1.4.2.tar.gz https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
+          && echo "2c916b5a9d26e64e8003e9b7d0e168c74520bff7a30f0345c80ae15eafc4ed0f  /tmp/xdp-tools-1.4.2.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/xdp-tools-1.4.2.tar.gz -C "${GITHUB_WORKSPACE}" \
           && cd "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 && ./configure && cd - \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 PREFIX=/usr install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 \
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 /tmp/xdp-tools-1.4.2.tar.gz \
           && pkg-config --libs --static libelf
 
     - name: Install staticcheck
-      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+      run: go install honnef.co/go/tools/cmd/staticcheck@2026.1
 
     - name: run static analysis
       run: make static-ci
@@ -107,9 +113,9 @@ jobs:
   unit-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: 1.25
 
@@ -122,18 +128,20 @@ jobs:
 
     - name: Install libbpf
       run: |
-          wget -q -O - https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/libbpf-1.5.0.tar.gz https://github.com/libbpf/libbpf/archive/refs/tags/v1.5.0.tar.gz \
+          && echo "53492aff6dd47e4da04ef5e672d753b9743848bdb38e9d90eafbe190b7983c44  /tmp/libbpf-1.5.0.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/libbpf-1.5.0.tar.gz -C "${GITHUB_WORKSPACE}" \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/libbpf-1.5.0/src install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/libbpf-1.5.0 /tmp/libbpf-1.5.0.tar.gz
 
     - name: Install libxdp
       run: |
-          wget -q -O - https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
-          | tar -xzC "${GITHUB_WORKSPACE}" \
+          wget -q -O /tmp/xdp-tools-1.4.2.tar.gz https://github.com/xdp-project/xdp-tools/releases/download/v1.4.2/xdp-tools-1.4.2.tar.gz \
+          && echo "2c916b5a9d26e64e8003e9b7d0e168c74520bff7a30f0345c80ae15eafc4ed0f  /tmp/xdp-tools-1.4.2.tar.gz" | sha256sum --check \
+          && tar -xzf /tmp/xdp-tools-1.4.2.tar.gz -C "${GITHUB_WORKSPACE}" \
           && cd "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 && ./configure && cd - \
           && sudo make -j -C "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 PREFIX=/usr install \
-          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 \
+          && sudo rm -rf "${GITHUB_WORKSPACE}"/xdp-tools-1.4.2 /tmp/xdp-tools-1.4.2.tar.gz \
           && pkg-config --libs --static libelf
 
     - name: unit-tests

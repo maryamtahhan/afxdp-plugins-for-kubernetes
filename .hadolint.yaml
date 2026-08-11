@@ -1,0 +1,6 @@
+ignore:
+  # Multi-stage builder images install build tools; pinning every apt package
+  # version is tracked separately as a nitpick and will be addressed when the
+  # build images are moved to a controlled snapshot repository.
+  - DL3008  # Pin versions in apt get install
+  - DL3009  # Delete the apt-get lists after installing

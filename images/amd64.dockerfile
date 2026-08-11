@@ -15,11 +15,14 @@
 FROM public.ecr.aws/docker/library/golang:1.25@sha256:2c7ebcaf2c1032b4b4d15df14b7edf3221b1e45dadfaa36ab6a2f8555feacaa6 AS cnibuilder
 COPY . /usr/src/afxdp_k8s_plugins
 WORKDIR /usr/src/afxdp_k8s_plugins
+# libdw-dev and libzstd-dev are required for static linking against Debian trixie's
+# newer elfutils (0.191+) where libelf.a references eu_search_tree_* and ZSTD symbols.
 RUN apt-get update \
-&& apt-get -y install --no-install-recommends libxdp-dev \
+&& apt-get -y install --no-install-recommends libxdp-dev libdw-dev libzstd-dev \
 && apt-get -y install -o APT::Keep-Downloaded-Packages=false --no-install-recommends clang \
 && apt-get -y install -o APT::Keep-Downloaded-Packages=false --no-install-recommends llvm \
 && apt-get -y install -o APT::Keep-Downloaded-Packages=false --no-install-recommends gcc-multilib \
+&& sed -i 's|LDFLAGS: -L. -lxdp -lbpf -lelf -lz|LDFLAGS: -L. -lxdp -lbpf -lelf -lz -lzstd -ldw|' internal/bpf/bpfWrapper.go \
 && make buildcni
 
 FROM public.ecr.aws/docker/library/golang:1.25-alpine@sha256:56961d79ea8129efddcc0b8643fd8a5416b4e6228cfd477e3fd61deb2672c587 AS dpbuilder
@@ -41,4 +44,6 @@ COPY --from=dpbuilder /usr/src/afxdp_k8s_plugins/bin/afxdp-dp /afxdp/afxdp-dp
 COPY --from=dpbuilder /usr/src/afxdp_k8s_plugins/images/entrypoint.sh /afxdp/entrypoint.sh
 COPY --from=dpbuilder /usr/src/afxdp_k8s_plugins/internal/bpf/xdp-pass/xdp_pass.o /afxdp/xdp_pass.o
 COPY --from=dpbuilder /usr/src/afxdp_k8s_plugins/internal/bpf/xdp-afxdp-redirect/xdp_afxdp_redirect.o /afxdp/xdp_afxdp_redirect.o
+# Root is required: entrypoint manages BPF map pinning and kernel networking setup.
+USER 0
 ENTRYPOINT ["/afxdp/entrypoint.sh"]
