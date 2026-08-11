@@ -26,10 +26,6 @@ import (
 	pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
 )
 
-const (
-	_proto = "unix"
-)
-
 var (
 	sock = pluginapi.DevicePluginPath + constants.Plugins.DevicePlugin.DevicePrefix + "-" + "syncer.sock"
 )

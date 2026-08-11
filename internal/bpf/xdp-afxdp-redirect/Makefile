@@ -26,7 +26,7 @@ afxdp_redirect:
 	-Wno-pointer-sign \
 	-Wno-compare-distinct-pointer-types \
 	-Werror \
-	-O2 -emit-llvm -c -g -o xdp_afxdp_redirect.ll xdp_afxdp_redirect.c
+	-O2 -emit-llvm -g -o xdp_afxdp_redirect.ll xdp_afxdp_redirect.c
 	$(LLC) -march=bpf -filetype=obj -o xdp_afxdp_redirect.o xdp_afxdp_redirect.ll
 
 clean:

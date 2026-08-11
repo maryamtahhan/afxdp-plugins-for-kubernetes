@@ -74,9 +74,6 @@ build: builddp buildcni
 fixup: ## Fixup for ubuntu
 	@sed -i "s/LDFLAGS: -L. -lxdp -lbpf -lelf -lz/LDFLAGS: -L. -lxdp -lbpf -lelf -lz -lzstd/g" internal/bpf/bpfWrapper.go
 
-generate-tar-image: ## Fixup for Trivy
-	$(CTR_CMD) save -o vul-image.tar afxdp-device-plugin:latest
-
 ##@ Container build.
 image-builder-check:
 	@if [ -z '$(CTR_CMD)' ] ; then echo '!! ERROR: containerized builds require podman||docker CLI, none found $$PATH' >&2 && exit 1; fi
@@ -174,13 +171,6 @@ static: static-ci
 	for file in $$(find . -iname "*.sh" -not -path "./.git/*"); do echo $$file && shellcheck $$file; done
 	@echo
 	@echo
-	@echo "******       Trivy       ******"
-	@echo
-	trivy image afxdp-device-plugin --no-progress --format json
-	trivy fs . --no-progress --format json
-	@echo
-	@echo
-
 cloc: format
 	@echo "******    Update CLOC    ******"
 	@echo

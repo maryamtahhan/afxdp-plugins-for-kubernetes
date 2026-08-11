@@ -26,7 +26,7 @@ xdppass:
 	-Wno-pointer-sign \
 	-Wno-compare-distinct-pointer-types \
 	-Werror \
-	-O2 -emit-llvm -c -g -o xdp_pass.ll xdp_pass.c
+	-O2 -emit-llvm -g -o xdp_pass.ll xdp_pass.c
 	$(LLC) -march=bpf -filetype=obj -o xdp_pass.o xdp_pass.ll
 
 clean:

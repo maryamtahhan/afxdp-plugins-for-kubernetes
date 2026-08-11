@@ -292,7 +292,7 @@ func (s *server) handleFdRequest(request string) error {
 
 func (s *server) handleBusyPollRequest(request string, fd int) error {
 	if fd <= 0 {
-		logging.Errorf("Pod " + s.podName + " - Invalid file descriptor")
+		logging.Errorf("Pod %s - Invalid file descriptor", s.podName)
 		if err := s.write(constants.Uds.Handshake.ResponseBusyPollNak); err != nil {
 			return err
 		}
